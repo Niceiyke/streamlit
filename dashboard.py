@@ -26,6 +26,9 @@ if df1.empty:
 # Filter data
 df = df1[(df1['Category'] == "Breakdown Time") | (df1['Category'] == "Minor stops & Speed losses")]
 
+with open('style.css') as f:
+    st.markdown(f'<style> {f.read()} </style>',unsafe_allow_html=True)
+
 st.title(":bar_chart: PM TEAM AMA DASHBOARD")
 
 # Convert 'ProductionDate' to datetime
@@ -98,25 +101,18 @@ first_column, second_column, third_column = st.columns(3)
 
 with first_column:
 
-    st.caption("Total Number Of Breakdowns")
-    st.caption(total_num_breakdown,)
-
-    st.caption("Total Duration Of Breakdowns")
-    st.caption(total_duration_breakdown)
+    st.metric(label="Total Number Of Breakdowns",value=total_num_breakdown)
+    st.metric(label="Total Duration Of Breakdown",value=total_duration_breakdown)
 
 with second_column:
-    st.caption("Total Number Of Minor Stops")
-    st.caption(total_num_minor_stops)
+    st.metric(label="Total Number Of Minor Stops",value=total_num_minor_stops)
+    st.metric(label="Total Duration Of Minor Stops",value=total_duration_minor_stops)
 
-    st.caption("Total Duration Of Minor Stops")
-    st.caption(total_duration_minor_stops)
 
 with third_column:
-    st.caption("No. Of Breakdowns >= 60 mins")
-    st.caption(num_breakdown_60mins)
+    st.metric(label="No. Of Breakdowns >= 60 mins",value=num_breakdown_60mins)
+    st.metric(label="Total Duration Of Breakdowns >= 60 mins",value=num_breakdown_60mins)
 
-    st.caption("Additional Metric Here")
-    st.caption("Additional Value Here")  # Placeholder for another metric
 
 # Bar chart
 bd_by_equipment = df_bd.groupby(by=['SubCategory'])[['Frequency', 'Duration']].sum().sort_values(by=['Duration', 'Frequency'], ascending=False)
