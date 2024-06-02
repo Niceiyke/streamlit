@@ -28,11 +28,5 @@ conn.commit()
 # Step 4: Insert the data into the table
 df.to_sql('production_data', conn, if_exists='append', index=False)
 
-# Step 5: Verify the insertion (optional)
-cursor.execute('SELECT * FROM production_data')
-rows = cursor.fetchall()
-for row in rows:
-    print(row)
-
 # Close the database connection
 conn.close()

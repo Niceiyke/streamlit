@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 from datetime import datetime, timedelta
+from components import custom_metric,custom_title
 
 st.set_page_config(page_title="PM Dashboard", page_icon=':bar_chart:', layout='wide')
 
@@ -48,16 +49,15 @@ df = df[required_columns]
 # Sidebar filters
 st.sidebar.header("Data Filters")
 
-# Calculate yesterday's date and today's date
-yesterday = datetime.now() - timedelta(1)
-today = datetime.now()
+
 
 # Initialize filters with the complete dataset
 line = st.sidebar.multiselect('Select Line', options=df['Line'].unique(), default=[1])
 
 # Calculate yesterday's date and today's date
-yesterday = datetime.now() - timedelta(1)
+yesterday = datetime.now() - timedelta(6)
 today = datetime.now()
+
 
 date_range = st.sidebar.date_input("Select Date Range", value=[yesterday.date(), today.date()])
 
@@ -107,23 +107,23 @@ total_duration_breakdown = df_bd['Duration'].sum()
 total_num_minor_stops = df_ms['Line'].count()
 total_duration_minor_stops = df_ms['Duration'].sum()
 
-# Calculate number of breakdowns >= 60 mins
-num_breakdown_60mins = df_bd[df_bd['Duration'] >= 60]['Line'].count()
+df_bd_analysis = df_bd[(df_bd['Duration'] >= 60) | ((df_bd['Frequency'] >= 2) & (df_bd['Duration'] >= 30))].reset_index().drop("index", axis=1)
+
 
 # Display metrics
 first_column, second_column, third_column = st.columns(3)
 
 with first_column:
-    st.metric(label="Total Number Of Breakdowns", value=total_num_breakdown)
-    st.metric(label="Total Duration Of Breakdown", value=total_duration_breakdown)
+    custom_metric(label="Number Of Breakdowns", value=total_num_breakdown)
+    custom_metric(label="Duration Of Breakdown", value=f"{total_duration_breakdown} mins")
 
 with second_column:
-    st.metric(label="Total Number Of Minor Stops", value=total_num_minor_stops)
-    st.metric(label="Total Duration Of Minor Stops", value=total_duration_minor_stops)
+    custom_metric(label="Number Of Minor Stops", value=total_num_minor_stops)
+    custom_metric(label="Duration Of Minor Stops", value=f"{total_duration_minor_stops} mins")
 
 with third_column:
-    st.metric(label="No. Of Breakdowns >= 60 mins", value=num_breakdown_60mins)
-    st.metric(label="Total Duration Of Breakdowns >= 60 mins", value=num_breakdown_60mins)
+    custom_metric(label="N0.Breakdowns for Analysis", value=df_bd_analysis['Duration'].count())
+    custom_metric(label="Breakdowns for Analysis", value=f"{df_bd_analysis['Duration'].sum()} mins")
 
 # Bar chart
 bd_by_equipment = df_bd.groupby(by=['Equipment'])[['Frequency', 'Duration']].sum().sort_values(by=['Duration', 'Frequency'], ascending=False)
@@ -137,8 +137,20 @@ grouped_data_msf = df_ms.groupby(by=['Equipment', 'FunctionFailure'])[['Frequenc
 
 bd_column, ms_column = st.columns(2)
 
-fig_bd = px.bar(bd_by_equipment, x=bd_by_equipment.index, y="Duration", title="Breakdown Duration per Machine")
-fig_ms = px.bar(ms_by_equipment, x=ms_by_equipment.index, y="Duration", title="Minor Stop Duration per Machine")
+
+custom_colors = ["#0571ec", "#e4a908"]
+
+
+fig_bd = px.bar(bd_by_equipment, x=bd_by_equipment.index, y="Duration", 
+                title="Breakdown Duration per Machine",
+                color_discrete_sequence=["#0571ec"],
+                template='simple_white' )
+fig_ms = px.bar(ms_by_equipment, 
+                x=ms_by_equipment.index, 
+                y="Duration", 
+                title="Minor Stop Duration per Machine",
+                color_discrete_sequence=["#0571ec"],
+                template='simple_white' )
 
 # Create a grouped bar chart using Plotly Express
 fig_grouped_bar_bd = px.bar(
@@ -147,7 +159,9 @@ fig_grouped_bar_bd = px.bar(
     y=['Frequency', 'Duration'],
     barmode='group',
     title="Breakdown Deployment",
-    text_auto=True
+    text_auto=True,
+     color_discrete_sequence=custom_colors,
+    template='simple_white' 
 )
 
 fig_grouped_bar_ms = px.bar(
@@ -156,7 +170,9 @@ fig_grouped_bar_ms = px.bar(
     y=['Frequency', 'Duration'],
     barmode='group',
     title="Minor Stop Deployment",
-    text_auto=True
+    text_auto=True,
+    color_discrete_sequence=custom_colors,
+    template='simple_white',
 )
 
 fig_grouped_bar_bd_failures = px.bar(
@@ -165,7 +181,9 @@ fig_grouped_bar_bd_failures = px.bar(
     y=['Frequency', 'Duration'],
     barmode='group',
     title="Breakdown Function Failures",
-    text_auto=True
+    text_auto=True,
+    color_discrete_sequence=custom_colors,
+    template='simple_white',
 )
 
 fig_grouped_bar_ms_failures = px.bar(
@@ -174,10 +192,16 @@ fig_grouped_bar_ms_failures = px.bar(
     y=['Frequency', 'Duration'],
     barmode='group',
     title="Minor Stop Function Failures",
-    text_auto=True
+    text_auto=True,
+    color_discrete_sequence=custom_colors,
+    template='simple_white',
 )
 
-df_bd_analysis = df_bd[(df_bd['Duration'] >= 60) | ((df_bd['Frequency'] >= 2) & (df_bd['Duration'] >= 30))].reset_index().drop("index", axis=1)
+fig_grouped_bar_bd_failures.update_yaxes(title_text='')
+fig_grouped_bar_bd_failures.update_xaxes(tickfont=dict(size=14))
+fig_grouped_bar_ms_failures.update_yaxes(title_text='')
+fig_grouped_bar_ms_failures.update_xaxes(tickfont=dict(size=14))
+
 
 with bd_column:
     st.plotly_chart(fig_bd)
