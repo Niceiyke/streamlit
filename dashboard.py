@@ -111,19 +111,19 @@ df_bd_analysis = df_bd[(df_bd['Duration'] >= 60) | ((df_bd['Frequency'] >= 2) & 
 
 
 # Display metrics
-first_column, second_column, third_column = st.columns(3)
+first_column, second_column,third_column = st.columns(3)
 
 with first_column:
     custom_metric(label="Number Of Breakdowns", value=total_num_breakdown)
     custom_metric(label="Duration Of Breakdown", value=f"{total_duration_breakdown} mins")
 
 with second_column:
-    custom_metric(label="Number Of Minor Stops", value=total_num_minor_stops)
+    custom_metric(label="No. Of Minor Stops", value=total_num_minor_stops)
     custom_metric(label="Duration Of Minor Stops", value=f"{total_duration_minor_stops} mins")
 
 with third_column:
-    custom_metric(label="N0.Breakdowns for Analysis", value=df_bd_analysis['Duration'].count())
-    custom_metric(label="Breakdowns for Analysis", value=f"{df_bd_analysis['Duration'].sum()} mins")
+    custom_metric(label="N0.BD for Analysis", value=df_bd_analysis['Duration'].count())
+    custom_metric(label="BD for Analysis", value=f"{df_bd_analysis['Duration'].sum()} mins")
 
 # Bar chart
 bd_by_equipment = df_bd.groupby(by=['Equipment'])[['Frequency', 'Duration']].sum().sort_values(by=['Duration', 'Frequency'], ascending=False)
@@ -138,7 +138,7 @@ grouped_data_msf = df_ms.groupby(by=['Equipment', 'FunctionFailure'])[['Frequenc
 bd_column, ms_column = st.columns(2)
 
 
-custom_colors = ["#0571ec", "#e4a908"]
+custom_colors = ["#0571ec", "#A57901"]
 
 
 fig_bd = px.bar(bd_by_equipment, x=bd_by_equipment.index, y="Duration", 
@@ -222,4 +222,6 @@ with bd_column:
 with ms_column:
     st.plotly_chart(fig_grouped_bar_ms_failures)
 
-st.dataframe(df_bd_analysis)
+st.dataframe(grouped_data_msf )
+
+

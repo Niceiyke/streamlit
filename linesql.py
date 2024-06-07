@@ -2,8 +2,10 @@ import pandas as pd
 import sqlite3
 
 # Step 1: Read the Excel file
-excel_file_path = 'archive.xlsx'
-df = pd.read_excel(io=excel_file_path,sheet_name='Sheet1',engine='openpyxl')
+file_path = 'archive.csv'
+df = pd.read_csv(file_path,encoding='latin')
+df['Category']=df['Category'].replace({'Minor stops & Speed losses':'Minor stops','Minor Stop':'Minor stops','Break Down':'Breakdown','Breakdown Time':'Breakdown'})
+df['FunctionFailure']=df['FunctionFailure'].replace({'Whethered bottles':'weathered bottles','influx of weathered bottles':'weathered bottles'})
 print("done readinf excel file")
 
 # Step 2: Create a SQLite database connection
@@ -27,6 +29,12 @@ conn.commit()
 
 # Step 4: Insert the data into the table
 df.to_sql('production_data', conn, if_exists='append', index=False)
+
+
+query = 'SELECT * FROM production_data'
+df1 = pd.read_sql_query(query, conn)
+
+print(df1.tail())
 
 # Close the database connection
 conn.close()
